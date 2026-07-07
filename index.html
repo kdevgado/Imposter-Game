@@ -1455,8 +1455,10 @@
       }
     };
 
+    const SAVED_PLAYERS_KEY = "pass-phone-game-hub-players";
+
     const state = {
-      players: [],
+      players: loadSavedPlayers(),
       gameId: "werewolf",
       category: "Classic",
       secretWord: "",
@@ -1760,6 +1762,47 @@
       element.textContent = message;
     }
 
+    function cleanPlayerName(name) {
+      return name.trim().replace(/\s+/g, " ");
+    }
+
+    function loadSavedPlayers() {
+      try {
+        const savedPlayers = window.localStorage.getItem(SAVED_PLAYERS_KEY);
+        if (!savedPlayers) return [];
+
+        const parsedPlayers = JSON.parse(savedPlayers);
+        if (!Array.isArray(parsedPlayers)) return [];
+
+        return parsedPlayers.reduce((players, player) => {
+          if (typeof player !== "string") return players;
+
+          const cleanName = cleanPlayerName(player);
+          const isDuplicate = players.some((item) => item.toLowerCase() === cleanName.toLowerCase());
+          if (cleanName && !isDuplicate) players.push(cleanName);
+          return players;
+        }, []);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function savePlayers() {
+      try {
+        window.localStorage.setItem(SAVED_PLAYERS_KEY, JSON.stringify(state.players));
+      } catch (error) {
+        // Storage can be unavailable in private browsing or locked-down browsers.
+      }
+    }
+
+    function clearSavedPlayers() {
+      try {
+        window.localStorage.removeItem(SAVED_PLAYERS_KEY);
+      } catch (error) {
+        // If storage is unavailable, clearing it is unnecessary.
+      }
+    }
+
     function formatThreatCount(count, mode) {
       return count === 1 ? `1 ${mode.threatSingular}` : `${count} ${mode.threatPlural}`;
     }
@@ -1918,6 +1961,7 @@
         remove.textContent = "x";
         remove.addEventListener("click", () => {
           state.players.splice(index, 1);
+          savePlayers();
           playSound("tap");
           renderPlayers();
         });
@@ -1928,7 +1972,7 @@
     }
 
     function addPlayer(name) {
-      const cleanName = name.trim().replace(/\s+/g, " ");
+      const cleanName = cleanPlayerName(name);
       if (!cleanName) return;
 
       if (state.players.some((player) => player.toLowerCase() === cleanName.toLowerCase())) {
@@ -1937,6 +1981,7 @@
       }
 
       state.players.push(cleanName);
+      savePlayers();
       playerNameInput.value = "";
       setError(playerError, "");
       playSound("tap");
@@ -2284,6 +2329,7 @@
 
     function startOver() {
       state.players = [];
+      clearSavedPlayers();
       clearRound();
       renderPlayers();
       showScreen("welcome");
