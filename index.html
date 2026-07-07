@@ -641,7 +641,7 @@
     }
 
     .flip-wrap {
-      perspective: 1000px;
+      perspective: none;
       min-height: clamp(320px, 58svh, 390px);
     }
 
@@ -649,12 +649,12 @@
       position: relative;
       width: 100%;
       min-height: clamp(320px, 58svh, 390px);
-      transform-style: preserve-3d;
-      transition: transform 560ms cubic-bezier(0.2, 0.82, 0.2, 1);
+      transform-style: flat;
+      transition: none;
     }
 
     .role-card.revealed {
-      transform: rotateY(180deg);
+      transform: none;
     }
 
     .role-face {
@@ -666,7 +666,7 @@
       display: grid;
       place-items: center;
       text-align: center;
-      backface-visibility: hidden;
+      backface-visibility: visible;
       background:
         linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.07)),
         rgba(0, 0, 0, 0.22);
@@ -674,18 +674,21 @@
     }
 
     .role-face.back {
-      transform: rotateY(180deg);
+      display: none;
+      transform: none;
       overflow-y: auto;
     }
 
+    .role-card.revealed .role-face.front {
+      display: none;
+    }
+
+    .role-card.revealed .role-face.back {
+      display: grid;
+    }
+
     .role-face::after {
-      content: "";
-      position: absolute;
-      width: 160%;
-      height: 70px;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
-      transform: rotate(-18deg) translateY(-150px);
-      animation: shine 2.6s ease-in-out infinite;
+      display: none;
     }
 
     @keyframes shine {
@@ -766,7 +769,7 @@
     }
 
     .shake {
-      animation: shake 360ms ease both;
+      animation: none;
     }
 
     @keyframes shake {
@@ -1503,18 +1506,19 @@
     }
 
     .flip-wrap {
-      perspective: 1200px;
+      perspective: none;
       min-height: 390px;
       filter: drop-shadow(0 28px 56px rgba(0, 0, 0, 0.34));
     }
 
     .role-card {
       min-height: 390px;
-      transition: transform 780ms cubic-bezier(0.15, 0.88, 0.2, 1.08);
+      transform-style: flat;
+      transition: none;
     }
 
     .role-card.revealed {
-      transform: rotateY(180deg) scale(1.012);
+      transform: none;
     }
 
     .role-face {
@@ -1542,12 +1546,21 @@
         linear-gradient(145deg, rgba(255, 255, 255, 0.18), transparent 34%),
         linear-gradient(135deg, rgba(49, 244, 255, 0.16), rgba(140, 92, 255, 0.12), rgba(255, 62, 165, 0.12)),
         rgba(4, 9, 22, 0.86);
+      display: none;
+      transform: none;
+    }
+
+    .role-card.revealed .role-face.front {
+      display: none;
+    }
+
+    .role-card.revealed .role-face.back {
+      display: grid;
     }
 
     .role-face::after {
-      height: 96px;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
-      animation: shine 3.2s ease-in-out infinite;
+      display: none;
+      animation: none;
     }
 
     .role-symbol {
@@ -1584,11 +1597,11 @@
     }
 
     #revealCardShell.shake {
-      animation: threatShake 420ms cubic-bezier(0.24, 0.82, 0.22, 1) both;
+      animation: none;
     }
 
     #revealCardShell.shake .role-title.imposter {
-      animation: threatGlitch 840ms steps(2, end) both, threatPulse 1.4s ease-in-out 840ms infinite;
+      animation: none;
     }
 
     @keyframes threatShake {
@@ -2140,6 +2153,13 @@
             <div class="custom-word-wrap" id="customWordWrap">
               <input id="customWordInput" type="text" maxlength="32" autocomplete="off" placeholder="Enter custom location" />
             </div>
+            <div class="section-block is-hidden" id="hintSection">
+              <h3>Imposter hints</h3>
+              <div class="number-switch" style="--cols: 2;" id="hintSwitch">
+                <button class="option-btn active" type="button" data-hints="off">No hints</button>
+                <button class="option-btn" type="button" data-hints="on">Give hints</button>
+              </div>
+            </div>
             <div class="section-block" id="threatSection">
               <h3 id="threatTitle">Hidden roles</h3>
               <div class="number-switch" style="--cols: 2;" id="imposterSwitch">
@@ -2399,6 +2419,7 @@
         setupLead: "Pick a word category or type your own custom word.",
         summary: "Players who know the word give careful clues. Imposters listen, bluff, and try to avoid the vote.",
         hasSecret: true,
+        hasImposterHints: true,
         wordBanks: IMPOSTER_WORD_BANKS,
         defaultCategory: "Food",
         secretSectionTitle: "Secret words",
@@ -2586,6 +2607,7 @@
       imposterIndexes: new Set(),
       currentRevealIndex: 0,
       selectedVotes: new Set(),
+      imposterHints: false,
       timerTotal: 180,
       timerRemaining: 180,
       timerMinutes: 3,
@@ -2612,6 +2634,8 @@
     const categoryGrid = document.getElementById("categoryGrid");
     const customWordWrap = document.getElementById("customWordWrap");
     const customWordInput = document.getElementById("customWordInput");
+    const hintSection = document.getElementById("hintSection");
+    const hintSwitch = document.getElementById("hintSwitch");
     const threatSection = document.getElementById("threatSection");
     const threatTitle = document.getElementById("threatTitle");
     const imposterSwitch = document.getElementById("imposterSwitch");
@@ -2674,11 +2698,11 @@
       return indexes;
     }
 
-    function createImposterRoles({ players, threatCount, secretWord }) {
+    function createImposterRoles({ players, threatCount, secretWord, imposterHint }) {
       const indexes = shuffledIndexes(players.length);
       const targets = indexes.slice(0, threatCount);
       const roles = players.map(() => createRole(
-        "You know it",
+        "Your safe!",
         "player",
         "OK",
         "You know the secret word. Give clues without making it too obvious.",
@@ -2692,7 +2716,8 @@
           "Imposter",
           "threat",
           "IMP",
-          "You do not know the secret word. Blend in and bluff carefully."
+          "You do not know the secret word. Blend in and bluff carefully.",
+          imposterHint ? [roleDetail("Hint", imposterHint)] : []
         );
       });
 
@@ -2990,6 +3015,7 @@
       state.roles = [];
       state.imposterIndexes = new Set();
       state.selectedVotes = new Set();
+      state.imposterHints = false;
       if (mode.hasSecret || mode.criteriaBanks) state.category = mode.defaultCategory;
       setError(playerError, "");
       setError(setupError, "");
@@ -3017,9 +3043,17 @@
       resultTitle.textContent = mode.resultTitle;
 
       categorySection.classList.toggle("is-hidden", !(mode.hasSecret || mode.criteriaBanks));
+      hintSection.classList.toggle("is-hidden", !mode.hasImposterHints);
       threatSection.classList.toggle("is-hidden", mode.type === "wordBomb");
       renderCategoryButtons();
+      renderHintToggle();
       renderThreatOptions();
+    }
+
+    function renderHintToggle() {
+      hintSwitch.querySelectorAll("[data-hints]").forEach((button) => {
+        button.classList.toggle("active", (button.dataset.hints === "on") === state.imposterHints);
+      });
     }
 
     function renderCategoryButtons() {
@@ -3150,6 +3184,17 @@
       return randomItem(mode.wordBanks[state.category]);
     }
 
+    function makeImposterHint(secretWord) {
+      if (!state.imposterHints || !secretWord) return "";
+      if (state.category !== "Custom") return `Category: ${state.category}`;
+
+      const lettersOnly = secretWord.replace(/[^a-z0-9]/gi, "");
+      const firstLetter = lettersOnly.charAt(0).toUpperCase();
+      const letterCount = lettersOnly.length;
+      if (!firstLetter || !letterCount) return "Custom word";
+      return `Starts with ${firstLetter}, ${letterCount} letters`;
+    }
+
     function chooseBombPrompt() {
       const mode = currentMode();
       const banks = mode.criteriaBanks || {};
@@ -3193,7 +3238,8 @@
       const assignment = mode.buildRoles({
         players: state.players,
         threatCount: state.imposters,
-        secretWord: state.secretWord
+        secretWord: state.secretWord,
+        imposterHint: makeImposterHint(state.secretWord)
       });
 
       setError(setupError, "");
@@ -3357,11 +3403,8 @@
       }
 
       if (role.kind === "threat") {
-        window.setTimeout(() => {
-          revealCardShell.classList.add("shake");
-          playSound("imposter");
-          if ("vibrate" in navigator) navigator.vibrate([60, 40, 120]);
-        }, 260);
+        playSound("imposter");
+        if ("vibrate" in navigator) navigator.vibrate([60, 40, 120]);
       } else {
         playSound("reveal");
       }
@@ -3643,6 +3686,15 @@
 
       state.imposters = Number(button.dataset.imposters);
       renderThreatOptions();
+      playSound("tap");
+    });
+
+    hintSwitch.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-hints]");
+      if (!button) return;
+
+      state.imposterHints = button.dataset.hints === "on";
+      renderHintToggle();
       playSound("tap");
     });
 
