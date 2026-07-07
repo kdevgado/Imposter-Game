@@ -2471,8 +2471,12 @@
               <div class="number-switch" style="--cols: 2;" id="imposterSwitch">
               </div>
             </div>
-            <div class="section-block">
+            <div class="section-block" id="timerSection">
               <h3>Round timer</h3>
+              <div class="number-switch" style="--cols: 2;" id="timerToggleSwitch">
+                <button class="option-btn active" type="button" data-timer-enabled="on">Timer on</button>
+                <button class="option-btn" type="button" data-timer-enabled="off">Timer off</button>
+              </div>
               <div class="timer-switch" style="--cols: 4;" id="timerSwitch">
                 <button class="option-btn active" type="button" data-minutes="1">1m</button>
                 <button class="option-btn" type="button" data-minutes="2">2m</button>
@@ -2595,13 +2599,13 @@
               <span id="bombPromptType">Contains</span>
               <strong id="bombPromptText">AR</strong>
             </div>
-            <div class="timer-shell">
+            <div class="timer-shell" id="bombTimerShell">
               <div class="timer-ring" id="bombTimerRing">
                 <div class="time-text" id="bombTimeText">01:00</div>
               </div>
               <p class="timer-label" id="bombStatus">Say a matching word before the timer runs out.</p>
             </div>
-            <div class="split-row">
+            <div class="split-row" id="bombTimerControls">
               <button class="btn" id="bombStartPause" type="button">Start bomb</button>
               <button class="btn secondary" id="bombReset" type="button">Reset</button>
             </div>
@@ -2812,6 +2816,8 @@
         summary: "Players who know the word give careful clues. Imposters listen, bluff, and try to avoid the vote.",
         hasSecret: true,
         hasImposterHints: true,
+        defaultImposterHints: true,
+        defaultTimerEnabled: false,
         wordBanks: IMPOSTER_WORD_BANKS,
         defaultCategory: "Food",
         secretSectionTitle: "Secret words",
@@ -3002,6 +3008,7 @@
       selectedVotes: new Set(),
       imposterHints: false,
       categoryFilter: "popular",
+      timerEnabled: true,
       timerTotal: 180,
       timerRemaining: 180,
       timerMinutes: 3,
@@ -3042,6 +3049,7 @@
     const threatSection = document.getElementById("threatSection");
     const threatTitle = document.getElementById("threatTitle");
     const imposterSwitch = document.getElementById("imposterSwitch");
+    const timerToggleSwitch = document.getElementById("timerToggleSwitch");
     const timerSwitch = document.getElementById("timerSwitch");
     const assignButton = document.getElementById("assignButton");
     const shuffleTitle = document.getElementById("shuffleTitle");
@@ -3064,6 +3072,8 @@
     const bombTurn = document.getElementById("bombTurn");
     const bombPromptType = document.getElementById("bombPromptType");
     const bombPromptText = document.getElementById("bombPromptText");
+    const bombTimerShell = document.getElementById("bombTimerShell");
+    const bombTimerControls = document.getElementById("bombTimerControls");
     const bombTimerRing = document.getElementById("bombTimerRing");
     const bombTimeText = document.getElementById("bombTimeText");
     const bombStatus = document.getElementById("bombStatus");
@@ -3508,7 +3518,8 @@
       state.roles = [];
       state.imposterIndexes = new Set();
       state.selectedVotes = new Set();
-      state.imposterHints = false;
+      state.imposterHints = Boolean(mode.defaultImposterHints);
+      state.timerEnabled = mode.defaultTimerEnabled !== false;
       customHintInput.value = "";
       if (mode.hasSecret || mode.criteriaBanks) {
         state.category = mode.defaultCategory;
@@ -3517,6 +3528,7 @@
       setError(playerError, "");
       setError(setupError, "");
       renderSetup();
+      syncTimerControls();
       syncTimerButtons();
       resetTimer();
     }
@@ -3545,6 +3557,7 @@
       renderCategoryButtons();
       renderHintToggle();
       renderThreatOptions();
+      syncTimerControls();
     }
 
     function renderHintToggle() {
@@ -3675,6 +3688,21 @@
       timerSwitch.querySelectorAll("[data-minutes]").forEach((button) => {
         button.classList.toggle("active", Number(button.dataset.minutes) === state.timerMinutes);
       });
+    }
+
+    function syncTimerControls() {
+      timerToggleSwitch.querySelectorAll("[data-timer-enabled]").forEach((button) => {
+        button.classList.toggle("active", (button.dataset.timerEnabled === "on") === state.timerEnabled);
+      });
+
+      timerSwitch.classList.toggle("is-hidden", !state.timerEnabled);
+      bombTimerShell.classList.toggle("is-hidden", !state.timerEnabled);
+      bombTimerControls.classList.toggle("is-hidden", !state.timerEnabled);
+
+      if (!state.timerEnabled) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
     }
 
     function renderPlayers() {
@@ -3843,7 +3871,7 @@
       state.timerTotal = state.timerMinutes * 60;
       state.timerRemaining = state.timerTotal;
       bombStartPause.textContent = "Start bomb";
-      bombStatus.textContent = "Say a matching word before the timer runs out.";
+      bombStatus.textContent = state.timerEnabled ? "Say a matching word before the timer runs out." : "No timer. Say a matching word, tap accepted, and pass.";
       updateBombTimerDisplay();
     }
 
@@ -3858,6 +3886,8 @@
     }
 
     function startPauseBombTimer() {
+      if (!state.timerEnabled) return;
+
       if (state.timerId) {
         clearInterval(state.timerId);
         state.timerId = null;
@@ -3919,7 +3949,11 @@
       revealCardShell.classList.remove("shake");
       revealRoleButton.disabled = false;
       hidePassButton.disabled = true;
-      hidePassButton.textContent = state.currentRevealIndex === state.players.length - 1 ? "Hide and start discussion" : "Hide and pass phone";
+      if (state.currentRevealIndex === state.players.length - 1) {
+        hidePassButton.textContent = state.timerEnabled ? "Hide and start discussion" : "Hide and start voting";
+      } else {
+        hidePassButton.textContent = "Hide and pass phone";
+      }
       roleContent.innerHTML = "";
     }
 
@@ -3983,7 +4017,7 @@
       if (state.currentRevealIndex >= state.players.length) {
         buildVoteList();
         resetTimer();
-        showScreen("timer");
+        showScreen(state.timerEnabled ? "timer" : "voting");
         return;
       }
 
@@ -4309,6 +4343,17 @@
 
       state.imposterHints = button.dataset.hints === "on";
       renderHintToggle();
+      playSound("tap");
+    });
+
+    timerToggleSwitch.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-timer-enabled]");
+      if (!button) return;
+
+      state.timerEnabled = button.dataset.timerEnabled === "on";
+      syncTimerControls();
+      resetTimer();
+      resetBombTimer();
       playSound("tap");
     });
 
