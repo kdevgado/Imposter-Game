@@ -287,19 +287,6 @@
       transform: scale(0.98);
     }
 
-    .game-mark {
-      width: 46px;
-      height: 46px;
-      border-radius: 15px;
-      display: grid;
-      place-items: center;
-      color: #071124;
-      background: linear-gradient(135deg, var(--cyan), var(--lime));
-      box-shadow: 0 12px 28px rgba(50, 246, 255, 0.2);
-      font-weight: 950;
-      letter-spacing: 0;
-    }
-
     .game-name {
       display: block;
       margin-bottom: 6px;
@@ -327,6 +314,10 @@
       font-size: 0.76rem;
       font-weight: 900;
       line-height: 1;
+    }
+
+    .game-deck-dots {
+      display: none;
     }
 
     .mode-summary {
@@ -1619,18 +1610,6 @@
       transform: translateY(0) scale(0.97);
     }
 
-    .game-mark {
-      width: 52px;
-      height: 52px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--game-a), var(--game-b));
-      box-shadow:
-        0 16px 34px color-mix(in srgb, var(--game-a) 28%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.45);
-      color: #06101f;
-      font-size: 0.94rem;
-    }
-
     .game-name {
       margin-bottom: 8px;
       color: #ffffff;
@@ -2157,7 +2136,7 @@
     .game-card {
       background: rgba(12, 18, 33, 0.86);
       border-color: rgba(226, 235, 255, 0.14);
-      grid-template-columns: 48px minmax(0, 1fr) 76px;
+      grid-template-columns: minmax(0, 1fr) 76px;
       column-gap: 14px;
       align-items: center;
       align-content: center;
@@ -2188,12 +2167,6 @@
 
     .game-card:hover .game-art img {
       transform: scale(1.05);
-    }
-
-    .game-mark {
-      color: #f8fbff;
-      background: color-mix(in srgb, var(--game-a) 82%, #10182a);
-      box-shadow: 0 14px 30px color-mix(in srgb, var(--game-a) 18%, transparent);
     }
 
     .game-name {
@@ -2233,7 +2206,7 @@
     }
 
     .game-card:nth-child(1) {
-      grid-template-columns: 52px minmax(0, 1fr) 94px;
+      grid-template-columns: minmax(0, 1fr) 94px;
     }
 
     .game-card:nth-child(1) .game-art {
@@ -2321,7 +2294,7 @@
       background: rgba(49, 244, 255, 0.09);
     }
 
-    @media (max-width: 420px) {
+    @media (max-width: 750px) {
       .app {
         padding: 12px;
       }
@@ -2338,9 +2311,30 @@
         grid-template-columns: 1fr;
       }
 
-      .game-grid,
       .option-grid {
         grid-template-columns: 1fr;
+      }
+
+      .game-grid {
+        width: calc(100% + 40px);
+        max-width: none;
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(272px, 84%);
+        justify-self: stretch;
+        justify-content: start;
+        gap: 14px;
+        margin-inline: -20px;
+        padding: 3px 20px 12px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-padding-inline: 20px;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+      }
+
+      .game-grid::-webkit-scrollbar {
+        display: none;
       }
 
       h1 {
@@ -2354,14 +2348,114 @@
       .game-card,
       .game-card:nth-child(1) {
         grid-column: auto;
-        grid-template-columns: 42px minmax(0, 1fr) 62px;
-        column-gap: 10px;
-        min-height: 156px;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        grid-template-areas:
+          "art"
+          "copy";
+        gap: 16px;
+        min-height: 352px;
+        padding: 14px;
+        border-radius: 26px;
+        align-content: start;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+        text-align: left;
+        background:
+          radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--game-a) 36%, transparent), transparent 34%),
+          radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--game-b) 30%, transparent), transparent 34%),
+          rgba(12, 18, 33, 0.9);
       }
 
       .game-art,
       .game-card:nth-child(1) .game-art {
-        width: 62px;
+        grid-area: art;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        border-radius: 22px;
+        justify-self: stretch;
+        box-shadow:
+          0 18px 34px rgba(0, 0, 0, 0.3),
+          0 0 30px color-mix(in srgb, var(--game-a) 16%, transparent);
+      }
+
+      .game-copy {
+        grid-area: copy;
+        align-self: start;
+        padding: 0 4px 52px;
+      }
+
+      .game-name {
+        margin-bottom: 9px;
+        font-size: 1.62rem;
+        line-height: 1.02;
+        overflow-wrap: normal;
+        word-break: normal;
+      }
+
+      .game-desc {
+        font-size: 1rem;
+        line-height: 1.36;
+      }
+
+      .game-card::before {
+        background:
+          linear-gradient(115deg, rgba(255, 255, 255, 0.16), transparent 34%),
+          repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 18px);
+        opacity: 0.75;
+        mask-image: linear-gradient(135deg, #000, transparent 78%);
+      }
+
+      .game-card::after {
+        content: "Play";
+        left: auto;
+        right: 18px;
+        bottom: 18px;
+        width: auto;
+        height: 38px;
+        padding: 0 17px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        color: #06101f;
+        background: linear-gradient(135deg, var(--game-a), var(--game-b));
+        box-shadow:
+          0 14px 28px color-mix(in srgb, var(--game-a) 24%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.38);
+        transform: none;
+        font-size: 0.88rem;
+        font-weight: 950;
+        line-height: 1;
+      }
+
+      .game-card:hover::after {
+        transform: none;
+      }
+
+      .game-deck-dots {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        min-height: 18px;
+        margin-top: -4px;
+      }
+
+      .game-deck-dot {
+        width: 8px;
+        height: 8px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0;
+        background: rgba(255, 255, 255, 0.28);
+        cursor: pointer;
+        transition: width 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      }
+
+      .game-deck-dot.active {
+        width: 27px;
+        background: linear-gradient(90deg, var(--cyan), var(--lime));
+        box-shadow: 0 0 18px rgba(50, 246, 255, 0.35);
       }
 
       .role-title,
@@ -2424,6 +2518,7 @@
               <span class="badge">One phone</span>
             </div>
             <div class="game-grid" id="gameGrid" aria-label="Choose a game"></div>
+            <div class="game-deck-dots" id="gameDeckDots" aria-label="Game deck navigation"></div>
           </div>
         </div>
       </section>
@@ -3055,6 +3150,7 @@
 
     const screens = document.querySelectorAll(".screen");
     const gameGrid = document.getElementById("gameGrid");
+    const gameDeckDots = document.getElementById("gameDeckDots");
     const playersEyebrow = document.getElementById("playersEyebrow");
     const playersLead = document.getElementById("playersLead");
     const playerForm = document.getElementById("playerForm");
@@ -3128,6 +3224,7 @@
     const resultWord = document.getElementById("resultWord");
     const guessSummary = document.getElementById("guessSummary");
     const confettiLayer = document.getElementById("confettiLayer");
+    let gameDeckSyncFrame = 0;
 
     function createRole(title, kind, symbol, hint, details = []) {
       return { title, kind, symbol, hint, details };
@@ -3505,10 +3602,43 @@
       return presets.slice(0, Math.min(4, presets.length));
     }
 
+    function setActiveGameDeckDot(index) {
+      gameDeckDots.querySelectorAll(".game-deck-dot").forEach((dot, dotIndex) => {
+        const isActive = dotIndex === index;
+        dot.classList.toggle("active", isActive);
+        dot.setAttribute("aria-current", isActive ? "true" : "false");
+      });
+    }
+
+    function syncGameDeckDots() {
+      const cards = [...gameGrid.querySelectorAll(".game-card")];
+      if (!cards.length) return;
+
+      const gridCenter = gameGrid.scrollLeft + gameGrid.clientWidth / 2;
+      const activeIndex = cards.reduce((nearestIndex, card, index) => {
+        const nearestCard = cards[nearestIndex];
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const nearestCenter = nearestCard.offsetLeft + nearestCard.offsetWidth / 2;
+        return Math.abs(cardCenter - gridCenter) < Math.abs(nearestCenter - gridCenter) ? index : nearestIndex;
+      }, 0);
+
+      setActiveGameDeckDot(activeIndex);
+    }
+
+    function queueGameDeckDotSync() {
+      if (gameDeckSyncFrame) return;
+
+      gameDeckSyncFrame = requestAnimationFrame(() => {
+        gameDeckSyncFrame = 0;
+        syncGameDeckDots();
+      });
+    }
+
     function renderGameHub() {
       gameGrid.innerHTML = "";
+      gameDeckDots.innerHTML = "";
 
-      Object.entries(GAME_MODES).forEach(([gameId, mode]) => {
+      Object.entries(GAME_MODES).forEach(([gameId, mode], index) => {
         const button = document.createElement("button");
         button.className = "game-card";
         button.type = "button";
@@ -3516,10 +3646,6 @@
         button.style.setProperty("--game-a", mode.colorA);
         button.style.setProperty("--game-b", mode.colorB);
         button.setAttribute("aria-label", `Play ${mode.name}`);
-
-        const mark = document.createElement("span");
-        mark.className = "game-mark";
-        mark.textContent = mode.mark;
 
         const copy = document.createElement("span");
         copy.className = "game-copy";
@@ -3547,9 +3673,23 @@
         art.appendChild(image);
 
         copy.append(name, desc, players);
-        button.append(mark, copy, art);
+        button.append(copy, art);
         gameGrid.appendChild(button);
+
+        const dot = document.createElement("button");
+        dot.className = "game-deck-dot";
+        dot.type = "button";
+        dot.setAttribute("aria-label", `Show ${mode.name}`);
+        dot.addEventListener("click", () => {
+          const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          button.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
+          setActiveGameDeckDot(index);
+        });
+        gameDeckDots.appendChild(dot);
       });
+
+      setActiveGameDeckDot(0);
+      requestAnimationFrame(syncGameDeckDots);
     }
 
     function selectGame(gameId) {
@@ -4286,6 +4426,9 @@
       playSound("tap");
       showScreen("players");
     });
+
+    gameGrid.addEventListener("scroll", queueGameDeckDotSync, { passive: true });
+    window.addEventListener("resize", queueGameDeckDotSync);
 
     document.querySelectorAll("[data-go]").forEach((button) => {
       button.addEventListener("click", () => {
