@@ -243,6 +243,89 @@ h3 {
   font-weight: 750;
 }
 
+.settings-row {
+  width: min(100%, 430px);
+  justify-self: center;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(50, 246, 255, 0.2);
+  border-radius: 20px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(50, 246, 255, 0.12), rgba(255, 61, 242, 0.08)),
+    rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+.settings-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.settings-copy strong {
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+.settings-copy span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.settings-btn {
+  min-height: 48px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 14px;
+  color: #06101f;
+  background: linear-gradient(135deg, var(--cyan), var(--lime));
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  box-shadow:
+    0 12px 24px rgba(50, 246, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+}
+
+.settings-btn:hover {
+  filter: saturate(1.08);
+  box-shadow:
+    0 16px 30px rgba(50, 246, 255, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+.settings-btn:active {
+  transform: scale(0.97);
+}
+
+.settings-status {
+  grid-column: 1 / -1;
+  min-height: 1.1em;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.settings-status:empty {
+  display: none;
+}
+
 .game-grid {
   width: 100%;
   display: grid;
@@ -1061,6 +1144,45 @@ input:focus {
   font-size: 2rem;
   line-height: 1.05;
   overflow-wrap: anywhere;
+}
+
+#revealCardShell.compact-reveal .role-face {
+  padding: 16px;
+}
+
+#revealCardShell.compact-reveal .role-face.back {
+  overflow: hidden;
+}
+
+#revealCardShell.compact-reveal #roleContent {
+  gap: 10px;
+}
+
+#revealCardShell.compact-reveal .role-symbol {
+  font-size: 2.25rem;
+}
+
+#revealCardShell.compact-reveal .role-title {
+  font-size: clamp(2rem, 9vw, 2.7rem);
+  line-height: 0.95;
+}
+
+#revealCardShell.compact-reveal .hint {
+  font-size: 0.84rem;
+  line-height: 1.28;
+}
+
+#revealCardShell.compact-reveal .role-detail-list {
+  gap: 8px;
+}
+
+#revealCardShell.compact-reveal .role-detail {
+  padding: 10px;
+}
+
+#revealCardShell.compact-reveal .role-detail strong {
+  font-size: clamp(1.35rem, 7vw, 1.8rem);
+  line-height: 1.03;
 }
 
 .shake {
@@ -2404,6 +2526,16 @@ input:focus {
     grid-template-columns: 1fr;
   }
 
+  .settings-row {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    text-align: center;
+  }
+
+  .settings-copy {
+    text-align: center;
+  }
+
   .game-grid {
     width: calc(100% + 40px);
     max-width: none;
@@ -2566,6 +2698,14 @@ input:focus {
   .result-name,
   .secret-word {
     font-size: 1.65rem;
+  }
+
+  #revealCardShell.compact-reveal .role-detail strong {
+    font-size: clamp(1.2rem, 6vw, 1.5rem);
+  }
+
+  #revealCardShell.compact-reveal .role-title {
+    font-size: clamp(1.75rem, 8vw, 2.3rem);
   }
 
   .flip-wrap,

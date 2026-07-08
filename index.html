@@ -34,6 +34,16 @@
             </div>
             <div class="game-grid" id="gameGrid" aria-label="Choose a game"></div>
             <div class="game-deck-dots" id="gameDeckDots" aria-label="Game deck navigation"></div>
+            <div class="settings-row">
+              <div class="settings-copy">
+                <strong>Fullscreen recommended</strong>
+                <span>Keeps private reveals clean and reduces accidental browser taps.</span>
+              </div>
+              <button class="settings-btn" id="fullscreenButton" type="button">
+                <span>Open fullscreen</span>
+              </button>
+              <p class="settings-status" id="fullscreenStatus" aria-live="polite"></p>
+            </div>
           </div>
         </div>
       </section>
@@ -736,8 +746,11 @@
     };
 
     const screens = document.querySelectorAll(".screen");
+    const app = document.getElementById("app");
     const gameGrid = document.getElementById("gameGrid");
     const gameDeckDots = document.getElementById("gameDeckDots");
+    const fullscreenButton = document.getElementById("fullscreenButton");
+    const fullscreenStatus = document.getElementById("fullscreenStatus");
     const playersEyebrow = document.getElementById("playersEyebrow");
     const playersLead = document.getElementById("playersLead");
     const playerForm = document.getElementById("playerForm");
@@ -1056,6 +1069,37 @@
 
     function setError(element, message) {
       element.textContent = message;
+    }
+
+    function fullscreenElement() {
+      return document.fullscreenElement || document.webkitFullscreenElement || null;
+    }
+
+    function updateFullscreenButton() {
+      fullscreenButton.textContent = fullscreenElement() ? "Exit fullscreen" : "Open fullscreen";
+      fullscreenStatus.textContent = "";
+    }
+
+    async function toggleFullscreen() {
+      try {
+        if (fullscreenElement()) {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        } else if (app.requestFullscreen) {
+          await app.requestFullscreen();
+        } else if (app.webkitRequestFullscreen) {
+          app.webkitRequestFullscreen();
+        } else {
+          fullscreenStatus.textContent = "Fullscreen is not available here.";
+        }
+      } catch (error) {
+        fullscreenStatus.textContent = "Tap again or allow fullscreen in your browser.";
+      }
+
+      updateFullscreenButton();
     }
 
     function cleanPlayerName(name) {
@@ -1907,6 +1951,7 @@
       revealProgress.textContent = `Player ${state.currentRevealIndex + 1} of ${state.players.length}`;
       roleCard.classList.remove("revealed");
       revealCardShell.classList.remove("shake");
+      revealCardShell.classList.remove("compact-reveal");
       revealRoleButton.disabled = false;
       hidePassButton.disabled = true;
       if (state.currentRevealIndex === state.players.length - 1) {
@@ -1921,6 +1966,7 @@
       const role = state.roles[state.currentRevealIndex];
       if (!role) return;
 
+      revealCardShell.classList.toggle("compact-reveal", role.details.length > 0);
       revealRoleButton.disabled = true;
       hidePassButton.disabled = false;
       roleContent.innerHTML = "";
@@ -2218,6 +2264,12 @@
 
     gameGrid.addEventListener("scroll", queueGameDeckDotSync, { passive: true });
     window.addEventListener("resize", queueGameDeckDotSync);
+    fullscreenButton.addEventListener("click", () => {
+      playSound("tap");
+      toggleFullscreen();
+    });
+    document.addEventListener("fullscreenchange", updateFullscreenButton);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenButton);
 
     document.querySelectorAll("[data-go]").forEach((button) => {
       button.addEventListener("click", () => {
