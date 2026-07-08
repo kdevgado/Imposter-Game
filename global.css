@@ -224,8 +224,7 @@ h3 {
   padding: 17px;
 }
 
-.mode-copy small,
-.online-game-card small {
+.mode-copy small {
   color: var(--cyan);
   font-size: 0.7rem;
   font-style: normal;
@@ -263,62 +262,180 @@ h3 {
   font-size: clamp(2.8rem, 14vw, 5rem);
 }
 
+.entry-toolbar {
+  min-height: 44px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .back-link {
   width: fit-content;
-  border: 0;
-  padding: 4px 0;
-  color: var(--muted);
-  background: transparent;
+  min-height: 42px;
+  border: 1px solid rgba(50, 246, 255, 0.32);
+  border-radius: 8px;
+  padding: 0 14px 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  background: rgba(50, 246, 255, 0.08);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
   cursor: pointer;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 900;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
 }
 
 .back-link:hover,
 .back-link:focus-visible {
   color: var(--text);
-  text-decoration: underline;
+  border-color: rgba(50, 246, 255, 0.72);
+  background: rgba(50, 246, 255, 0.14);
+  transform: translateX(-2px);
   outline: none;
 }
 
-.online-game-card {
-  min-height: 98px;
-  margin-top: 22px;
-  border: 1px solid rgba(182, 255, 103, 0.3);
-  border-radius: 8px;
-  padding: 12px;
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  align-items: center;
-  gap: 14px;
-  background: rgba(182, 255, 103, 0.07);
-  text-align: left;
+.back-arrow {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--cyan);
+  box-shadow: 0 0 16px rgba(50, 246, 255, 0.28);
 }
 
-.online-game-card img {
-  width: 72px;
-  height: 72px;
+.back-arrow::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-left: 2px solid #06101f;
+  border-bottom: 2px solid #06101f;
+  transform: rotate(45deg);
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--lime);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.live-indicator i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 12px rgba(182, 255, 103, 0.8);
+  animation: livePulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes livePulse {
+  to {
+    opacity: 0.42;
+  }
+}
+
+.trivia-avatar {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 12px;
+  border: 1px solid rgba(182, 255, 103, 0.3);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(182, 255, 103, 0.07);
+  box-shadow: 0 0 34px rgba(182, 255, 103, 0.1);
+}
+
+.trivia-avatar img {
+  width: 70px;
+  height: 70px;
   object-fit: contain;
 }
 
-.online-game-card span,
-.online-game-card strong,
-.online-game-card em {
+.room-entry {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.entry-switch {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  background: rgba(5, 9, 22, 0.62);
+}
+
+.entry-switch button {
   min-width: 0;
-  display: block;
-}
-
-.online-game-card strong {
-  margin-top: 3px;
-  font-size: 1.15rem;
-}
-
-.online-game-card em {
-  margin-top: 5px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
   color: var(--muted);
-  font-size: 0.86rem;
-  font-style: normal;
-  line-height: 1.35;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+  transition: color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+
+.entry-switch button:hover,
+.entry-switch button:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.entry-switch button.active {
+  color: #06101f;
+  background: linear-gradient(135deg, var(--cyan), var(--lime));
+  box-shadow: 0 6px 18px rgba(50, 246, 255, 0.18);
+}
+
+.room-entry-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.room-entry-form input {
+  border-radius: 8px;
+  background: rgba(3, 8, 20, 0.76);
+}
+
+.room-code-input {
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.room-submit-btn {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.entry-note {
+  display: block;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .game-picker,
@@ -952,13 +1069,8 @@ button:disabled {
     height: 112px;
   }
 
-  .online-game-card {
-    grid-template-columns: 58px minmax(0, 1fr);
-  }
-
-  .online-game-card img {
-    width: 58px;
-    height: 58px;
+  .entry-toolbar {
+    margin-bottom: 8px;
   }
 
   .room-header {

@@ -328,17 +328,55 @@ h3 {
 
 .mode-back-link {
   width: fit-content;
-  margin: 0 auto;
-  color: var(--muted);
+  min-height: 42px;
+  margin: 0;
+  border: 1px solid rgba(50, 246, 255, 0.36);
+  border-radius: 8px;
+  padding: 0 14px 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 9px;
+  color: var(--text);
+  background: rgba(50, 246, 255, 0.1);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.12),
+    0 10px 24px rgba(0, 0, 0, 0.16);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 900;
   text-decoration: none;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
 }
 
 .mode-back-link:hover,
 .mode-back-link:focus-visible {
   color: var(--text);
-  text-decoration: underline;
+  border-color: rgba(50, 246, 255, 0.76);
+  background: rgba(50, 246, 255, 0.17);
+  transform: translateX(-2px);
+  outline: none;
+}
+
+.mode-back-arrow {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 16px rgba(50, 246, 255, 0.32);
+}
+
+.mode-back-arrow::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-left: 2px solid #06101f;
+  border-bottom: 2px solid #06101f;
+  transform: rotate(45deg);
 }
 
 .game-grid {

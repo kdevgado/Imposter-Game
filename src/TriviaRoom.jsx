@@ -73,6 +73,7 @@ export default function TriviaRoom({ onBack }) {
   const [room, setRoom] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [entryMode, setEntryMode] = useState("create");
   const [now, setNow] = useState(Date.now());
   const revealLock = useRef(false);
 
@@ -310,32 +311,88 @@ export default function TriviaRoom({ onBack }) {
   }
 
   if (!roomCode || !room) {
+    const submitEntry = (event) => {
+      event.preventDefault();
+      if (entryMode === "create") createRoom();
+      else joinRoom();
+    };
+
     return (
       <section className="hero-panel online-entry-panel">
-        <button className="back-link" type="button" onClick={onBack}>Back to game modes</button>
+        <div className="entry-toolbar">
+          <button className="back-link" type="button" onClick={onBack}>
+            <span className="back-arrow" aria-hidden="true" />
+            Game modes
+          </button>
+          <span className="live-indicator"><i aria-hidden="true" />Online</span>
+        </div>
+
+        <div className="trivia-avatar">
+          <img src="/icons/mafia/detective.png" alt="" />
+        </div>
         <p className="eyebrow">Online room code</p>
         <h1>Trivia Party</h1>
         <p className="lead">Create a live room, share the four-letter code, and answer together from everyone&apos;s phone.</p>
 
-        <div className="online-game-card">
-          <img src="/icons/mafia/detective.png" alt="" />
-          <span>
-            <small>Online exclusive</small>
-            <strong>Trivia Party</strong>
-            <em>Quick questions, live answer reveals, and a final leaderboard.</em>
-          </span>
-        </div>
-
-        <div className="entry-grid">
-          <label>
-            Player name
-            <input value={playerName} onChange={(event) => setPlayerName(event.target.value)} placeholder="Your name" maxLength={18} />
-          </label>
-          <button className="primary-btn" type="button" disabled={busy || !authReady} onClick={createRoom}>Create room</button>
-          <div className="join-row">
-            <input value={joinCode} onChange={(event) => setJoinCode(event.target.value.toUpperCase())} placeholder="CODE" maxLength={4} />
-            <button className="secondary-btn" type="button" disabled={busy || !authReady} onClick={joinRoom}>Join</button>
+        <div className="room-entry">
+          <div className="entry-switch" aria-label="Room action">
+            <button
+              className={entryMode === "create" ? "active" : ""}
+              type="button"
+              onClick={() => {
+                setEntryMode("create");
+                setError("");
+              }}
+            >
+              Create room
+            </button>
+            <button
+              className={entryMode === "join" ? "active" : ""}
+              type="button"
+              onClick={() => {
+                setEntryMode("join");
+                setError("");
+              }}
+            >
+              Join room
+            </button>
           </div>
+
+          <form className="room-entry-form" onSubmit={submitEntry}>
+            <label>
+              Player name
+              <input
+                value={playerName}
+                onChange={(event) => setPlayerName(event.target.value)}
+                placeholder="Your name"
+                maxLength={18}
+                autoComplete="name"
+              />
+            </label>
+
+            {entryMode === "join" && (
+              <label>
+                Room code
+                <input
+                  className="room-code-input"
+                  value={joinCode}
+                  onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+                  placeholder="ABCD"
+                  maxLength={4}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                />
+              </label>
+            )}
+
+            <button className="primary-btn room-submit-btn" type="submit" disabled={busy || !authReady}>
+              {busy ? "Connecting..." : entryMode === "create" ? "Create room code" : "Join room"}
+            </button>
+          </form>
+
+          <span className="entry-note">
+            {entryMode === "create" ? "A new four-letter code will be generated." : "Enter the code shown on the host's screen."}
+          </span>
         </div>
         {error && <p className="alert">{error}</p>}
       </section>
