@@ -779,6 +779,22 @@ input:focus {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+.category-icon.sticker-icon,
+.category-row-icon.sticker-icon {
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.category-icon img,
+.category-row-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  padding: 7px;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.28));
+}
+
 .category-tile span:last-child {
   font-size: 0.96rem;
   font-weight: 950;
