@@ -1203,16 +1203,32 @@
 
     function imposterCategoryIcon(category) {
       const icons = {
-        Bible: "icons/bible.png",
-        Custom: "icons/custom.png",
-        "Filipino Party": "icons/filipino.png",
-        Food: "icons/food.png",
-        Movies: "icons/movies.png",
-        Objects: "icons/objects.png",
-        Places: "icons/place.png"
+        Bible: "icons/imposter/bible.png",
+        Custom: "icons/imposter/custom.png",
+        "Filipino Party": "icons/imposter/filipino.png",
+        Food: "icons/imposter/food.png",
+        Movies: "icons/imposter/movies.png",
+        Objects: "icons/imposter/objects.png",
+        Places: "icons/imposter/place.png",
+        SCJ: "icons/imposter/scj.png"
       };
 
       return icons[category] || "";
+    }
+
+    function werewolfRoleIcon(title) {
+      const icons = {
+        Bodyguard: "icons/werewolf/bodygaurd.png",
+        "Cursed Villager": "icons/werewolf/cursed.png",
+        Cupid: "icons/werewolf/cupid.png",
+        Doctor: "icons/werewolf/doctor.png",
+        Hunter: "icons/werewolf/hunter.png",
+        Seer: "icons/werewolf/seer.png",
+        Villager: "icons/werewolf/villager.png",
+        Werewolf: "icons/werewolf/werewolf.png"
+      };
+
+      return icons[title] || "";
     }
 
     function fillCategoryIcon(icon, category, mode) {
@@ -1563,7 +1579,20 @@
         button.className = "option-btn";
         button.type = "button";
         button.dataset.extraRole = roleId;
-        button.textContent = extraRole.title;
+        button.classList.add("extra-role-btn");
+        const iconSrc = werewolfRoleIcon(extraRole.title);
+        if (iconSrc) {
+          const image = document.createElement("img");
+          image.src = iconSrc;
+          image.alt = "";
+          image.loading = "lazy";
+          image.decoding = "async";
+          button.appendChild(image);
+        }
+
+        const label = document.createElement("span");
+        label.textContent = extraRole.title;
+        button.appendChild(label);
         if (state.werewolfExtraRoles.includes(roleId)) button.classList.add("active");
         extraRoleSwitch.appendChild(button);
       });
@@ -2023,7 +2052,18 @@
 
       const symbol = document.createElement("div");
       symbol.className = "role-symbol";
-      symbol.textContent = role.symbol;
+      const roleIconSrc = state.gameId === "werewolf" ? werewolfRoleIcon(role.title) : "";
+      if (roleIconSrc) {
+        symbol.classList.add("sticker-role");
+        const image = document.createElement("img");
+        image.src = roleIconSrc;
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        symbol.appendChild(image);
+      } else {
+        symbol.textContent = role.symbol;
+      }
 
       const title = document.createElement("div");
       title.className = `role-title ${role.kind === "threat" ? "imposter" : "player"}`;
