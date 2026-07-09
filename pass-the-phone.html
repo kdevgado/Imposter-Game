@@ -24,10 +24,20 @@
       <section class="screen active" data-screen="welcome">
         <div class="card">
           <div class="stack center">
-            <a class="mode-back-link" href="/">
-              <span class="mode-back-arrow" aria-hidden="true"></span>
-              Game modes
-            </a>
+            <div class="hub-toolbar">
+              <a class="mode-back-link" href="/">
+                <span class="mode-back-arrow" aria-hidden="true"></span>
+                Game modes
+              </a>
+              <button class="settings-btn hub-fullscreen-btn" id="fullscreenButton" type="button">
+                <span class="fullscreen-icon" aria-hidden="true"></span>
+                <span class="fullscreen-button-copy">
+                  <small>Recommended</small>
+                  <strong id="fullscreenButtonLabel">Open fullscreen</strong>
+                </span>
+              </button>
+            </div>
+            <p class="settings-status hub-fullscreen-status" id="fullscreenStatus" aria-live="polite"></p>
             <p class="eyebrow">Pass the phone</p>
             <h1><span class="title-glow">Game Hub</span></h1>
             <p class="lead">Pick a hidden-role game, pass the phone for private reveals, then argue your way to the truth.</p>
@@ -38,16 +48,6 @@
             </div>
             <div class="game-grid" id="gameGrid" aria-label="Choose a game"></div>
             <div class="game-deck-dots" id="gameDeckDots" aria-label="Game deck navigation"></div>
-            <div class="settings-row">
-              <div class="settings-copy">
-                <strong>Fullscreen recommended</strong>
-                <span>Keeps private reveals clean and reduces accidental browser taps.</span>
-              </div>
-              <button class="settings-btn" id="fullscreenButton" type="button">
-                <span>Open fullscreen</span>
-              </button>
-              <p class="settings-status" id="fullscreenStatus" aria-live="polite"></p>
-            </div>
           </div>
         </div>
       </section>
@@ -520,7 +520,7 @@
       imposter: {
         name: "Imposter",
         mark: "IM",
-        image: "images/mask.gif",
+        image: "images/mask-transparent.gif",
         colorA: "#31f4ff",
         colorB: "#ff3ea5",
         minPlayers: 3,
@@ -565,7 +565,7 @@
       werewolf: {
         name: "Werewolf",
         mark: "WW",
-        image: "images/werewolf.gif",
+        image: "images/werewolf-transparent.gif",
         colorA: "#8c5cff",
         colorB: "#ff4d6d",
         minPlayers: 5,
@@ -603,7 +603,7 @@
       mafia: {
         name: "Mafia",
         mark: "MF",
-        image: "images/gun.gif",
+        image: "images/gun-transparent.gif",
         colorA: "#ff3ea5",
         colorB: "#ffd166",
         minPlayers: 5,
@@ -639,7 +639,7 @@
       bomb: {
         name: "Who's Got the Bomb",
         mark: "BG",
-        image: "images/bomb.gif",
+        image: "images/bomb-transparent.gif",
         colorA: "#ff8a3d",
         colorB: "#c7ff5a",
         type: "wordBomb",
@@ -676,7 +676,7 @@
       spyfall: {
         name: "Spyfall",
         mark: "SP",
-        image: "images/spy.gif",
+        image: "images/spy-transparent.gif",
         colorA: "#31f4ff",
         colorB: "#8c5cff",
         minPlayers: 3,
@@ -755,6 +755,7 @@
     const gameGrid = document.getElementById("gameGrid");
     const gameDeckDots = document.getElementById("gameDeckDots");
     const fullscreenButton = document.getElementById("fullscreenButton");
+    const fullscreenButtonLabel = document.getElementById("fullscreenButtonLabel");
     const fullscreenStatus = document.getElementById("fullscreenStatus");
     const playersEyebrow = document.getElementById("playersEyebrow");
     const playersLead = document.getElementById("playersLead");
@@ -1081,7 +1082,9 @@
     }
 
     function updateFullscreenButton() {
-      fullscreenButton.textContent = fullscreenElement() ? "Exit fullscreen" : "Open fullscreen";
+      const isFullscreen = Boolean(fullscreenElement());
+      fullscreenButtonLabel.textContent = isFullscreen ? "Exit fullscreen" : "Open fullscreen";
+      fullscreenButton.classList.toggle("active", isFullscreen);
       fullscreenStatus.textContent = "";
     }
 

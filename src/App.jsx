@@ -22,9 +22,9 @@ export default function App() {
         <div className="mode-grid">
           <a className="mode-card pass-mode" href="/pass-the-phone.html">
             <span className="mode-art" aria-hidden="true">
-              <img src="/images/mask.gif" alt="" />
-              <img src="/images/werewolf.gif" alt="" />
-              <img src="/images/bomb.gif" alt="" />
+              <img src="/images/mask-transparent.gif" alt="" />
+              <img src="/images/werewolf-transparent.gif" alt="" />
+              <img src="/images/bomb-transparent.gif" alt="" />
             </span>
             <span className="mode-copy">
               <small>One device</small>
