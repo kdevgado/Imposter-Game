@@ -41,7 +41,7 @@ export default function App() {
             <span className="mode-copy">
               <small>Multiple devices</small>
               <strong>Online Room Code</strong>
-              <em>Create a room, invite friends, and play Trivia Party together live.</em>
+              <em>Create a room, invite friends, and play UNO or Trivia Party together live.</em>
               <span className="mode-action">Enter online mode</span>
             </span>
           </button>

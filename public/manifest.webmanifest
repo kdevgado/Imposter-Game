@@ -1,7 +1,7 @@
 {
   "name": "DDD Game Hub",
   "short_name": "Game Hub",
-  "description": "Pass-the-phone party games and online Trivia Party rooms.",
+  "description": "Pass-the-phone party games and live online UNO and Trivia Party rooms.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

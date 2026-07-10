@@ -5,11 +5,13 @@ import {
   doc,
   getDoc,
   onSnapshot,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc
 } from "firebase/firestore";
 import { db, ensureAnonymousUser } from "./firebase.js";
+import UnoRoom from "./UnoRoom.jsx";
 
 const ROOM_LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -38,6 +40,18 @@ const QUESTIONS = [
 
 const QUESTION_LOOKUP = Object.fromEntries(QUESTIONS.map((question) => [question.id, question]));
 const CATEGORIES = ["Mixed", ...new Set(QUESTIONS.map((question) => question.category))];
+const ONLINE_GAMES = {
+  trivia: {
+    title: "Trivia Party",
+    label: "Fast quiz rounds",
+    description: "Race through live questions and climb the scoreboard."
+  },
+  uno: {
+    title: "UNO",
+    label: "Classic card game",
+    description: "Match colors, use action cards, and empty your hand first."
+  }
+};
 
 function cleanName(value) {
   return value.trim().replace(/\s+/g, " ").slice(0, 18);
@@ -75,6 +89,7 @@ export default function TriviaRoom({ onBack }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [entryMode, setEntryMode] = useState("create");
+  const [selectedGame, setSelectedGame] = useState("uno");
   const [now, setNow] = useState(Date.now());
   const revealLock = useRef(false);
 
@@ -183,9 +198,21 @@ export default function TriviaRoom({ onBack }) {
         code = randomRoomCode();
       }
 
+      const gameState = selectedGame === "trivia"
+        ? {
+            settings: { category: "Mixed", roundCount: 5, answerSeconds: 20 },
+            questionIds: [],
+            currentRound: 0,
+            currentQuestionId: null,
+            questionEndsAt: null,
+            answers: {},
+            scores: { [playerId]: 0 }
+          }
+        : { uno: null };
+
       await setDoc(roomRef(code), {
         code,
-        game: "trivia",
+        game: selectedGame,
         phase: "lobby",
         hostId: playerId,
         createdAt: serverTimestamp(),
@@ -194,12 +221,7 @@ export default function TriviaRoom({ onBack }) {
         players: {
           [playerId]: { id: playerId, name, isHost: true, joinedAt: Date.now() }
         },
-        questionIds: [],
-        currentRound: 0,
-        currentQuestionId: null,
-        questionEndsAt: null,
-        answers: {},
-        scores: { [playerId]: 0 }
+        ...gameState
       });
       setRoomCode(code);
     } catch {
@@ -220,24 +242,31 @@ export default function TriviaRoom({ onBack }) {
     setBusy(true);
     setError("");
     try {
-      const snapshot = await getDoc(roomRef(code));
-      if (!snapshot.exists()) return setError("No room found with that code.");
-      if (snapshot.data().game !== "trivia") return setError("That code belongs to a different game.");
-      if (snapshot.data().phase !== "lobby") return setError("That game has already started.");
+      await runTransaction(db, async (transaction) => {
+        const reference = roomRef(code);
+        const snapshot = await transaction.get(reference);
+        if (!snapshot.exists()) throw new Error("No room found with that code.");
+        const roomData = snapshot.data();
+        if (!ONLINE_GAMES[roomData.game]) throw new Error("That room uses an unsupported game.");
+        if (roomData.phase !== "lobby") throw new Error("That game has already started.");
+        if (roomData.game === "uno" && Object.keys(roomData.players || {}).length >= 8 && !roomData.players?.[playerId]) {
+          throw new Error("That UNO room is full.");
+        }
 
-      await updateDoc(roomRef(code), {
-        [`players.${playerId}`]: {
-          id: playerId,
-          name,
-          isHost: snapshot.data().hostId === playerId,
-          joinedAt: Date.now()
-        },
-        [`scores.${playerId}`]: 0,
-        updatedAt: serverTimestamp()
+        transaction.update(reference, {
+          [`players.${playerId}`]: {
+            id: playerId,
+            name,
+            isHost: roomData.hostId === playerId,
+            joinedAt: Date.now()
+          },
+          ...(roomData.game === "trivia" ? { [`scores.${playerId}`]: 0 } : {}),
+          updatedAt: serverTimestamp()
+        });
       });
       setRoomCode(code);
-    } catch {
-      setError("Could not join. Check the room code and Firebase rules.");
+    } catch (joinError) {
+      setError(joinError.message || "Could not join. Check the room code and Firebase rules.");
     } finally {
       setBusy(false);
     }
@@ -247,6 +276,51 @@ export default function TriviaRoom({ onBack }) {
     if (!room) return;
     if (isHost) {
       await deleteDoc(roomRef(room.code)).catch(() => {});
+    } else if (room.game === "uno" && room.phase !== "lobby") {
+      await runTransaction(db, async (transaction) => {
+        const reference = roomRef(room.code);
+        const snapshot = await transaction.get(reference);
+        if (!snapshot.exists()) return;
+        const latestRoom = snapshot.data();
+        const remainingPlayers = { ...(latestRoom.players || {}) };
+        delete remainingPlayers[playerId];
+        const uno = latestRoom.uno ? structuredClone(latestRoom.uno) : null;
+
+        if (!uno) {
+          transaction.update(reference, { players: remainingPlayers, updatedAt: serverTimestamp() });
+          return;
+        }
+
+        const currentPlayerId = uno.turnOrder[uno.turnIndex];
+        const oldOrder = [...uno.turnOrder];
+        const leavingIndex = oldOrder.indexOf(playerId);
+        uno.turnOrder = oldOrder.filter((id) => id !== playerId);
+        delete uno.hands[playerId];
+        if (uno.unoPlayerId === playerId) uno.unoPlayerId = null;
+
+        if (uno.turnOrder.length < 2) {
+          transaction.update(reference, {
+            players: remainingPlayers,
+            phase: "lobby",
+            uno: null,
+            updatedAt: serverTimestamp()
+          });
+          return;
+        }
+
+        if (currentPlayerId === playerId) {
+          let nextIndex = leavingIndex;
+          do {
+            nextIndex = (nextIndex + uno.direction + oldOrder.length) % oldOrder.length;
+          } while (oldOrder[nextIndex] === playerId);
+          uno.turnIndex = uno.turnOrder.indexOf(oldOrder[nextIndex]);
+          uno.drawnCardId = null;
+        } else {
+          uno.turnIndex = uno.turnOrder.indexOf(currentPlayerId);
+        }
+        uno.lastAction = { type: "leave", playerId };
+        transaction.update(reference, { players: remainingPlayers, uno, updatedAt: serverTimestamp() });
+      }).catch(() => {});
     } else {
       await updateDoc(roomRef(room.code), {
         [`players.${playerId}`]: deleteField(),
@@ -269,7 +343,7 @@ export default function TriviaRoom({ onBack }) {
   }
 
   async function startGame() {
-    if (!room || !isHost) return;
+    if (!room || room.game !== "trivia" || !isHost) return;
     if (players.length < 2) return setError("Use at least 2 players for Trivia Party.");
 
     const pool = room.settings.category === "Mixed"
@@ -323,7 +397,7 @@ export default function TriviaRoom({ onBack }) {
   }
 
   async function playAgain() {
-    if (!room || !isHost) return;
+    if (!room || room.game !== "trivia" || !isHost) return;
     await updateDoc(roomRef(room.code), {
       phase: "lobby",
       questionIds: [],
@@ -356,12 +430,14 @@ export default function TriviaRoom({ onBack }) {
           </span>
         </div>
 
-        <div className="trivia-avatar">
-          <img src="/icons/mafia/detective.png" alt="" />
+        <div className={`trivia-avatar ${selectedGame === "uno" ? "uno-avatar" : ""}`}>
+          {selectedGame === "uno"
+            ? <span className="uno-logo" aria-hidden="true">UNO</span>
+            : <img src="/icons/mafia/detective.png" alt="" />}
         </div>
         <p className="eyebrow">Online room code</p>
-        <h1>Trivia Party</h1>
-        <p className="lead">Create a live room, share the four-letter code, and answer together from everyone&apos;s phone.</p>
+        <h1>Online Games</h1>
+        <p className="lead">Create a live room, share the four-letter code, and play together from everyone&apos;s phone.</p>
 
         <div className="room-entry">
           <div className="entry-switch" aria-label="Room action">
@@ -388,6 +464,33 @@ export default function TriviaRoom({ onBack }) {
           </div>
 
           <form className="room-entry-form" onSubmit={submitEntry}>
+            {entryMode === "create" && (
+              <fieldset className="online-game-fieldset">
+                <legend>Choose a game</legend>
+                <div className="game-picker online-game-picker">
+                  {Object.entries(ONLINE_GAMES).map(([gameId, game]) => (
+                    <button
+                      className={`game-choice ${selectedGame === gameId ? "active" : ""}`}
+                      type="button"
+                      aria-pressed={selectedGame === gameId}
+                      key={gameId}
+                      onClick={() => {
+                        setSelectedGame(gameId);
+                        setError("");
+                      }}
+                    >
+                      <span className={`game-choice-mark ${gameId}`} aria-hidden="true">{gameId === "uno" ? "UNO" : "?"}</span>
+                      <span>
+                        <strong>{game.title}</strong>
+                        <small>{game.label}</small>
+                        <em>{game.description}</em>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
             <label>
               Player name
               <input
@@ -423,7 +526,7 @@ export default function TriviaRoom({ onBack }) {
             {!isOnline
               ? "Reconnect to the internet to create or join an online room."
               : entryMode === "create"
-                ? "A new four-letter code will be generated."
+                ? `A new ${ONLINE_GAMES[selectedGame].title} room code will be generated.`
                 : "Enter the code shown on the host's screen."}
           </span>
         </div>
@@ -435,17 +538,23 @@ export default function TriviaRoom({ onBack }) {
   return (
     <>
       <RoomHeader room={room} isHost={isHost} onLeave={leaveRoom} />
-      {room.phase === "lobby" && (
-        <Lobby room={room} players={players} isHost={isHost} error={error} onSetting={updateSetting} onStart={startGame} />
-      )}
-      {room.phase === "question" && (
-        <Question room={room} question={question} timeLeft={timeLeft} answer={myAnswer} onAnswer={submitAnswer} />
-      )}
-      {room.phase === "answer" && (
-        <RoundResult room={room} players={players} question={question} isHost={isHost} onNext={nextRound} />
-      )}
-      {room.phase === "final" && (
-        <FinalLeaderboard room={room} players={players} isHost={isHost} onPlayAgain={playAgain} />
+      {room.game === "uno" ? (
+        <UnoRoom room={room} playerId={playerId} players={players} isHost={isHost} error={error} setError={setError} />
+      ) : (
+        <>
+          {room.phase === "lobby" && (
+            <Lobby room={room} players={players} isHost={isHost} error={error} onSetting={updateSetting} onStart={startGame} />
+          )}
+          {room.phase === "question" && (
+            <Question room={room} question={question} timeLeft={timeLeft} answer={myAnswer} onAnswer={submitAnswer} />
+          )}
+          {room.phase === "answer" && (
+            <RoundResult room={room} players={players} question={question} isHost={isHost} onNext={nextRound} />
+          )}
+          {room.phase === "final" && (
+            <FinalLeaderboard room={room} players={players} isHost={isHost} onPlayAgain={playAgain} />
+          )}
+        </>
       )}
     </>
   );
@@ -455,7 +564,7 @@ function RoomHeader({ room, isHost, onLeave }) {
   return (
     <header className="room-header">
       <div>
-        <span className="status-dot">Trivia Party</span>
+        <span className="status-dot">{ONLINE_GAMES[room.game]?.title || "Online game"}</span>
         <strong>{room.code}</strong>
       </div>
       <div>
