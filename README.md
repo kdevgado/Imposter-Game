@@ -6,6 +6,8 @@ DDD Game Hub is a collection of pass-the-phone party games plus live online UNO 
 
 You do not need to install developer tools or run any code. Choose your device and open the downloaded installer.
 
+Current release: **v1.0.3**
+
 ### [Download for Android](https://github.com/kdevgado/ddd-gamehub/releases/latest/download/DDD-Game-Hub-Android.apk)
 
 Download the APK, open it, and tap **Install**. Android may ask you to allow installation from your browser or Files app the first time.
