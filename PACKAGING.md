@@ -11,7 +11,7 @@ npm install
 npm run desktop:installer
 ```
 
-The installer is written to `release/windows/DDD-Game-Hub-Setup-<version>-x64.exe`.
+The installer is written to `release/windows/DDD-Game-Hub-Windows-Setup.exe`.
 
 To test the desktop wrapper without creating an installer:
 
@@ -28,7 +28,7 @@ npm install
 npm run android:apk
 ```
 
-The installable development APK is written to `release/android/DDD-Game-Hub-debug.apk`. It is signed with Android's standard debug key, which is suitable for direct testing and sharing but not for Google Play distribution.
+The installable development APK is written to `release/android/DDD-Game-Hub-Android.apk`. It is signed with Android's standard debug key, which is suitable for direct testing and sharing but not for Google Play distribution.
 
 Open the generated native project when Android Studio testing or a production-signed build is needed:
 

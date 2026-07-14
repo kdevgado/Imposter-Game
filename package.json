@@ -58,7 +58,7 @@
         }
       ],
       "icon": "public/icons/imposter/custom.png",
-      "artifactName": "DDD-Game-Hub-Setup-${version}-${arch}.${ext}"
+      "artifactName": "DDD-Game-Hub-Windows-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,

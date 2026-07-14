@@ -28,7 +28,7 @@ if (!existsSync(sourceApk)) {
 }
 
 const releaseDirectory = path.join(projectRoot, "release", "android");
-const releaseApk = path.join(releaseDirectory, "DDD-Game-Hub-debug.apk");
+const releaseApk = path.join(releaseDirectory, "DDD-Game-Hub-Android.apk");
 mkdirSync(releaseDirectory, { recursive: true });
 copyFileSync(sourceApk, releaseApk);
 console.log(`APK ready: ${releaseApk}`);
