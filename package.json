@@ -1,6 +1,6 @@
 {
   "name": "ddd-gamehub",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Pass-the-phone party games and live online game rooms.",
   "author": "DDD Game Hub",
   "private": true,
@@ -14,7 +14,7 @@
     "android:open": "npm run android:sync && cap open android",
     "android:apk": "npm run android:sync && node scripts/build-android.cjs",
     "desktop:run": "npm run build && electron .",
-    "desktop:installer": "npm run build && electron-builder --win nsis"
+    "desktop:installer": "npm run build && electron-builder --win nsis --publish never"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",
